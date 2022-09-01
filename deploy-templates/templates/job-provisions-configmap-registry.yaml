@@ -1,0 +1,52 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: jenkins-job-provisions-{{ .Values.jenkins.jobProvisioner }}
+  labels:
+  {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+
+data:
+  context: |
+    import groovy.json.*
+    import jenkins.model.Jenkins
+    import javaposse.jobdsl.plugin.*
+    import com.cloudbees.hudson.plugins.folder.*
+    import hudson.model.*
+    import java.util.zip.GZIPInputStream
+    import java.util.zip.GZIPOutputStream
+
+    String scriptText = new String(Base64.decoder.decode('{{ .Files.Get "JobProvisioner.groovy" | b64enc }}'))
+    String jobName = "{{ .Values.jenkins.jobProvisioner }}"
+    String folderName = "job-provisions"
+    String ciFolderName = "ci"
+
+    def folder = Jenkins.instance.getItem(folderName)
+    if (folder == null) {
+      folder = Jenkins.instance.createProject(Folder.class, folderName)
+    }
+
+    def ciFolder = folder.getItem(ciFolderName)
+    if (ciFolder == null) {
+      ciFolder = folder.createProject(Folder.class, ciFolderName)
+    }
+
+    def project = ciFolder.getItem(jobName)
+    if (project == null) {
+      project = ciFolder.createProject(FreeStyleProject, jobName)
+    }
+
+    project.getBuildersList().clear()
+    executeDslScripts = new ExecuteDslScripts()
+    executeDslScripts.setScriptText(scriptText)
+    project.getBuildersList().add(executeDslScripts)
+    def definitionList = [
+        new StringParameterDefinition("NAME", ""),
+        new StringParameterDefinition("BRANCH", ""),
+        new StringParameterDefinition("GIT_CREDENTIALS_ID", ""),
+        new StringParameterDefinition("REPOSITORY_PATH", ""),
+        new StringParameterDefinition("DEFAULT_BRANCH", "")
+    ]
+
+    project.addProperty(new ParametersDefinitionProperty(definitionList))
+    project.setConcurrentBuild(true)
+    project.save()

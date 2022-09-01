@@ -1,0 +1,9 @@
+apiVersion: v2.edp.epam.com/v1alpha1
+kind: JenkinsScript
+metadata:
+  name: jenkins-job-provisions-{{ .Values.jenkins.jobProvisioner }}
+  labels:
+  {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+spec:
+  ownerName: null
+  sourceConfigMapName: jenkins-job-provisions-{{ .Values.jenkins.jobProvisioner }}
