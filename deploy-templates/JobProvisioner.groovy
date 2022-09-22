@@ -19,6 +19,7 @@ String deployRegistryRegulationsStages = '[' +
         '[{"name": "create-redash-snippets"},' +
         '{"name": "upload-global-vars-changes"},' +
         '{"name": "create-trembita-business-process"},' +
+        '{"name": "update-registry-settings"},' +
         '{"name": "update-theme-login-page"},' +
         '{"name": "create-keycloak-roles"},' +
         '{"name": "bpms-rollout"},' +
