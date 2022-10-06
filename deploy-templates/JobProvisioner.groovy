@@ -74,6 +74,12 @@ String cleanupStages = '[' +
         '{"name": "cleanup-trigger"}]}' +
         ']'
 
+String formMigrationStages = '[' +
+        '{"stages": [{"name": "checkout"},' +
+        '{"name": "init-registry"},' +
+        '{"name": "form-data-storage-migration"}]}' +
+        ']'
+
 String historyExcerptorStages = '[' +
         '{"stages": [{"name": "data-validation"},' +
         '{"name": "checkout"},' +
@@ -89,6 +95,7 @@ switch (codebaseName) {
                 createReleaseStages, repositoryPath)
         createCleanUpPipeline("cleanup-job", codebaseName, cleanupStages,
                 repositoryPath, codebaseHistoryName)
+        createFormMigrationPipeline("form-storage-migration", codebaseName, formMigrationStages, repositoryPath)
         createReleaseDeletePipeline(new String("Delete-release-${codebaseName}"), codebaseName, defaultBranch,
                 deleteRegistryStages, repositoryPath)
         if (codebaseBranch) {
@@ -175,6 +182,31 @@ void createReleaseDeletePipeline(String pipelineName, String codebaseName, Strin
                 stringParam("LOG_LEVEL", "INFO", "ERROR, WARN, INFO or DEBUG")
             }
 
+        }
+    }
+}
+
+void createFormMigrationPipeline(String pipelineName, String codebaseName, String stages,
+                                 String repositoryPath) {
+    pipelineJob(pipelineName) {
+        concurrentBuild(false)
+        logRotator {
+            numToKeep(10)
+        }
+        definition {
+            cps {
+                script("@Library(['edp-library-pipelines']) _ \n\nBuild()")
+                sandbox(true)
+            }
+            parameters {
+                booleanParam("DELETE_INVALID_DATA", false)
+                booleanParam("DELETE_AFTER_MIGRATION", false)
+                stringParam("ADDITIONAL_KEY_PATTERNS", "")
+                stringParam("STAGES", stages)
+                stringParam("CODEBASE_NAME", codebaseName)
+                stringParam("REPOSITORY_PATH", repositoryPath)
+                stringParam("LOG_LEVEL", "INFO", "ERROR, WARN, INFO or DEBUG")
+            }
         }
     }
 }
