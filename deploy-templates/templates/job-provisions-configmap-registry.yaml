@@ -44,7 +44,8 @@ data:
         new StringParameterDefinition("BRANCH", ""),
         new StringParameterDefinition("GIT_CREDENTIALS_ID", ""),
         new StringParameterDefinition("REPOSITORY_PATH", ""),
-        new StringParameterDefinition("DEFAULT_BRANCH", "")
+        new StringParameterDefinition("DEFAULT_BRANCH", ""),
+        new StringParameterDefinition("DEPLOYMENT_MODE", "")
     ]
 
     project.addProperty(new ParametersDefinitionProperty(definitionList))

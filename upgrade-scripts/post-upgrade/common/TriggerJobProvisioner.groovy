@@ -19,11 +19,12 @@ void call() {
                 "-n $NAMESPACE", returnStdout: true)
         def GERRIT_PORT = sh(script: "oc get gitserver gerrit -o jsonpath={.spec.sshPort} -n $NAMESPACE", returnStdout: true)
         def REPOSITORY_PATH = "ssh://jenkins@gerrit:$GERRIT_PORT/$codebase"
+        def DEPLOYMENT_MODE = sh(script: "helm get values registry-configuration -n $NAMESPACE | grep 'deploymentMode: ' | awk '{print \$2}'", returnStdout: true).trim()
 
         // Trigger registry job-provisioner
         sh "curl -XPOST \"$JENKINS_URL_WITH_CREDS/job/job-provisions/job/ci/job/registry/buildWithParameters?" +
                 "NAME=$codebase&DEFAULT_BRANCH=$DEFAULT_BRANCH&GIT_CREDENTIALS_ID=$GIT_CREDENTIALS_ID&" +
-                "GERRIT_PORT=$GERRIT_PORT&REPOSITORY_PATH=$REPOSITORY_PATH\""
+                "GERRIT_PORT=$GERRIT_PORT&REPOSITORY_PATH=$REPOSITORY_PATH&DEPLOYMENT_MODE=$DEPLOYMENT_MODE\""
         }
 }
 

@@ -21,6 +21,7 @@ void call() {
                 "-n $NAMESPACE", returnStdout: true)
         def GERRIT_PORT = sh(script: "oc get gitserver gerrit -o jsonpath={.spec.sshPort} -n $NAMESPACE", returnStdout: true)
         def REPOSITORY_PATH = "ssh://jenkins@gerrit:$GERRIT_PORT/$NAME"
+        def DEPLOYMENT_MODE = sh(script: "helm get values registry-configuration -n $NAMESPACE | grep 'deploymentMode: ' | awk '{print \$2}'", returnStdout: true).trim()
 
         // Create codebasebranch CR for history-excerptor codebase
         sh "oc apply -f ./resources/historyExcerptorCodebasebranch.yaml -n $NAMESPACE"
@@ -35,7 +36,7 @@ void call() {
         // Manually trigger registry job-provisioner to create Create-release-history-excerptor pipeline
         sh "curl -XPOST \"$JENKINS_URL_WITH_CREDS/job/job-provisions/job/ci/job/registry/buildWithParameters?" +
                 "NAME=$NAME&DEFAULT_BRANCH=$DEFAULT_BRANCH&GIT_CREDENTIALS_ID=$GIT_CREDENTIALS_ID&" +
-                "GERRIT_PORT=$GERRIT_PORT&REPOSITORY_PATH=$REPOSITORY_PATH\""
+                "GERRIT_PORT=$GERRIT_PORT&REPOSITORY_PATH=$REPOSITORY_PATH&DEPLOYMENT_MODE=$DEPLOYMENT_MODE\""
     }
 }
 

@@ -5,6 +5,7 @@ String codebaseName = "${NAME}"
 String codebaseBranch = "${BRANCH}"
 String defaultBranch = "${DEFAULT_BRANCH}"
 String repositoryPath = "${REPOSITORY_PATH}"
+String deploymentMode = "${DEPLOYMENT_MODE}"
 String codebaseHistoryName = "history-excerptor"
 
 String deployRegistryRegulationsStages = '[' +
@@ -16,10 +17,9 @@ String deployRegistryRegulationsStages = '[' +
         '{"name": "create-backup"},' +
         '{"name": "create-redash-roles"}]},' +
         '{"parallelStages": [{"name": "deploy-data-model"},' +
-        '[{"name": "create-redash-snippets"},' +
+        ((deploymentMode.equals("development") ? '[{"name": "create-redash-snippets"},' : '[')) +
         '{"name": "upload-global-vars-changes"},' +
         '{"name": "create-trembita-business-process"},' +
-        '{"name": "update-registry-settings"},' +
         '{"name": "update-theme-login-page"},' +
         '{"name": "create-keycloak-roles"},' +
         '{"name": "bpms-rollout"},' +
@@ -27,10 +27,8 @@ String deployRegistryRegulationsStages = '[' +
         '{"name": "create-permissions-business-process"},' +
         '{"name": "upload-form-changes"},' +
         '{"name": "create-reports"},' +
-        '{"name": "import-excerpts"},' +
-        '{"name": "publish-notification-templates"}]]},' +
-        '{"stages": [{"name": "publish-geoserver-configuration"},' +
-        '{"name": "run-autotests"}]}' +
+        '{"name": "import-excerpts"}]]},' +
+        '{"stages": [{"name": "run-autotests"}]}' +
         ']'
 
 String deployDataModelStages = '[' +
@@ -74,12 +72,6 @@ String cleanupStages = '[' +
         '{"name": "cleanup-trigger"}]}' +
         ']'
 
-String formMigrationStages = '[' +
-        '{"stages": [{"name": "checkout"},' +
-        '{"name": "init-registry"},' +
-        '{"name": "form-data-storage-migration"}]}' +
-        ']'
-
 String historyExcerptorStages = '[' +
         '{"stages": [{"name": "data-validation"},' +
         '{"name": "checkout"},' +
@@ -92,42 +84,41 @@ switch (codebaseName) {
     case "registry-regulations":
         createFolder(codebaseName)
         createReleaseDeletePipeline(new String("Create-release-${codebaseName}"), codebaseName, defaultBranch,
-                createReleaseStages, repositoryPath)
+                createReleaseStages, repositoryPath, deploymentMode)
         createCleanUpPipeline("cleanup-job", codebaseName, cleanupStages,
-                repositoryPath, codebaseHistoryName)
-        createFormMigrationPipeline("form-storage-migration", codebaseName, formMigrationStages, repositoryPath)
+                repositoryPath, codebaseHistoryName, deploymentMode)
         createReleaseDeletePipeline(new String("Delete-release-${codebaseName}"), codebaseName, defaultBranch,
-                deleteRegistryStages, repositoryPath)
+                deleteRegistryStages, repositoryPath, deploymentMode)
         if (codebaseBranch) {
             createCiPipeline(new String("Build-${codebaseName}"), codebaseName, codebaseBranch,
-                    deployRegistryRegulationsStages, repositoryPath)
+                    deployRegistryRegulationsStages, repositoryPath, deploymentMode)
             createCiPipeline(new String("Build-${codebaseName}-data-model"), codebaseName, codebaseBranch,
-                    deployDataModelStages, repositoryPath, false)
+                    deployDataModelStages, repositoryPath, deploymentMode, false)
         }
         break
     case "history-excerptor":
         createFolder(codebaseName)
         createReleaseDeletePipeline(new String("Create-release-${codebaseName}"), codebaseName, defaultBranch,
-                createReleaseStages, repositoryPath)
+                createReleaseStages, repositoryPath, deploymentMode)
         createReleaseDeletePipeline(new String("Delete-release-${codebaseName}"), codebaseName, defaultBranch,
-                deleteServiceStages, repositoryPath)
+                deleteServiceStages, repositoryPath, deploymentMode)
         createHistoryExcerptorPipeline("history-excerptor", codebaseName,
-                historyExcerptorStages, repositoryPath)
+                historyExcerptorStages, repositoryPath, deploymentMode)
         break
     default:
         createFolder(codebaseName)
         createReleaseDeletePipeline(new String("Create-release-${codebaseName}"), codebaseName, defaultBranch,
-                createReleaseStages, repositoryPath)
+                createReleaseStages, repositoryPath, deploymentMode)
         createReleaseDeletePipeline(new String("Delete-release-${codebaseName}"), codebaseName, defaultBranch,
-                deleteServiceStages, repositoryPath)
+                deleteServiceStages, repositoryPath, deploymentMode)
         if (codebaseBranch)
             createCiPipeline(new String("Build-${codebaseName}"), codebaseName, codebaseBranch,
-                    buildDataComponentStages, repositoryPath)
+                    buildDataComponentStages, repositoryPath, deploymentMode)
 }
 
 
 void createCiPipeline(String pipelineName, String codebaseName, String codebaseBranch, String stages,
-                      String repositoryPath, boolean trigger = true) {
+                      String repositoryPath, String deploymentMode, boolean trigger = true) {
     pipelineJob("${codebaseName}/${codebaseBranch.toUpperCase().replaceAll(/\//, "-")}-${pipelineName}") {
         concurrentBuild(false)
         logRotator {
@@ -156,6 +147,7 @@ void createCiPipeline(String pipelineName, String codebaseName, String codebaseB
                 stringParam("CODEBASE_BRANCH", codebaseBranch)
                 stringParam("REPOSITORY_PATH", repositoryPath)
                 stringParam("LOG_LEVEL", "INFO", "ERROR, WARN, INFO or DEBUG")
+                stringParam("DEPLOYMENT_MODE", deploymentMode)
             }
 
         }
@@ -163,7 +155,7 @@ void createCiPipeline(String pipelineName, String codebaseName, String codebaseB
 }
 
 void createReleaseDeletePipeline(String pipelineName, String codebaseName, String defaultBranch,
-                                 String stages, String repositoryPath) {
+                                 String stages, String repositoryPath, String deploymentMode) {
     pipelineJob("${codebaseName}/${pipelineName}") {
         concurrentBuild(false)
         logRotator {
@@ -180,39 +172,15 @@ void createReleaseDeletePipeline(String pipelineName, String codebaseName, Strin
                 stringParam("BRANCH", defaultBranch)
                 stringParam("REPOSITORY_PATH", repositoryPath)
                 stringParam("LOG_LEVEL", "INFO", "ERROR, WARN, INFO or DEBUG")
+                stringParam("DEPLOYMENT_MODE", deploymentMode)
             }
 
-        }
-    }
-}
-
-void createFormMigrationPipeline(String pipelineName, String codebaseName, String stages,
-                                 String repositoryPath) {
-    pipelineJob(pipelineName) {
-        concurrentBuild(false)
-        logRotator {
-            numToKeep(10)
-        }
-        definition {
-            cps {
-                script("@Library(['edp-library-pipelines']) _ \n\nBuild()")
-                sandbox(true)
-            }
-            parameters {
-                booleanParam("DELETE_INVALID_DATA", false)
-                booleanParam("DELETE_AFTER_MIGRATION", false)
-                stringParam("ADDITIONAL_KEY_PATTERNS", "")
-                stringParam("STAGES", stages)
-                stringParam("CODEBASE_NAME", codebaseName)
-                stringParam("REPOSITORY_PATH", repositoryPath)
-                stringParam("LOG_LEVEL", "INFO", "ERROR, WARN, INFO or DEBUG")
-            }
         }
     }
 }
 
 void createCleanUpPipeline(String pipelineName, String codebaseName, String stages,
-                           String repositoryPath, String codebaseHistoryName) {
+                           String repositoryPath, String codebaseHistoryName, String deploymentMode) {
     pipelineJob(pipelineName) {
         concurrentBuild(false)
         logRotator {
@@ -224,11 +192,14 @@ void createCleanUpPipeline(String pipelineName, String codebaseName, String stag
                 sandbox(true)
             }
             parameters {
+                booleanParam("RECREATE_EMPTY", true, "If set to true, registry-regulations will be recreated from " +
+                        "empty template, else, will be used current source")
                 stringParam("STAGES", stages)
                 stringParam("CODEBASE_NAME", codebaseName)
                 stringParam("CODEBASE_HISTORY_NAME", codebaseHistoryName)
                 stringParam("REPOSITORY_PATH", repositoryPath)
                 stringParam("LOG_LEVEL", "INFO", "ERROR, WARN, INFO or DEBUG")
+                stringParam("DEPLOYMENT_MODE", deploymentMode)
             }
 
         }
@@ -236,7 +207,7 @@ void createCleanUpPipeline(String pipelineName, String codebaseName, String stag
 }
 
 void createHistoryExcerptorPipeline(String pipelineName, String codebaseName, String stages,
-                                    String repositoryPath) {
+                                    String repositoryPath, String deploymentMode) {
     pipelineJob("${codebaseName}/${pipelineName}") {
         concurrentBuild(false)
         logRotator {
@@ -254,6 +225,7 @@ void createHistoryExcerptorPipeline(String pipelineName, String codebaseName, St
                 stringParam("CODEBASE_NAME", codebaseName)
                 stringParam("REPOSITORY_PATH", repositoryPath)
                 stringParam("LOG_LEVEL", "INFO", "ERROR, WARN, INFO or DEBUG")
+                stringParam("DEPLOYMENT_MODE", deploymentMode)
             }
 
         }
