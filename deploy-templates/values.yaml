@@ -28,6 +28,12 @@ jenkins:
       secret: edp-gerrit-ciuser-sshkey
       type: ssh
   jobProvisioner: registry
+  port: "8080"
+  jnlpPort: "50000"
+  basePath: cicd
+
+gerrit:
+  basePath: gerrit
 
 keycloakIntegration:
   enabled: true
@@ -38,9 +44,12 @@ monitoring:
   roleName: jenkins-monitoring-role
 
 keycloak:
+  host: platform-keycloak:8080
   clientName: jenkins-deployer
   secretName: jenkins-keycloak-client
   realm: admin
+
+sentinel: {}
 
 # Test values (actually are passed via deploy pipeline)
 dockerRegistry: docker-registry.openshift-image-registry.svc

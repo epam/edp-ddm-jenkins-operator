@@ -8,10 +8,10 @@ metadata:
   {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
   name: jenkins
 spec:
-  host: {{ template "jenkins-operator.jenkinsBaseUrl" . }}
-  path: /
+  host: {{ template "admin-tools.hostname" . }}
+  path: /{{ .Values.jenkins.basePath }}
   port:
-    targetPort: 8080
+    targetPort: {{ .Values.jenkins.port }}
   tls:
     insecureEdgeTerminationPolicy: Redirect
     termination: edge

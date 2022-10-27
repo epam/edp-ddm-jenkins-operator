@@ -20,7 +20,7 @@ spec:
         app: jenkins
       annotations:
         backup.velero.io/backup-volumes: jenkins-data
-        sidecar.istio.io/inject: "false" 
+        sidecar.istio.io/inject: "false"
     spec:
       volumes:
         - name: jenkins-data
@@ -63,7 +63,7 @@ spec:
         - name: jenkins
           image: {{ template "imageRegistry" . -}} {{ .Values.jenkins.image.name }}:{{ .Values.jenkins.image.version }}
           ports:
-            - containerPort: 8080
+            - containerPort: {{ .Values.jenkins.port }}
               protocol: TCP
           env:
             - name: CI_NAMESPACE
@@ -87,9 +87,9 @@ spec:
                   name: jenkins-admin-password
                   key: password
             - name: JENKINS_UI_URL
-              value: https://{{ include "jenkins-operator.jenkinsBaseUrl" . }}
+              value: {{ include "admin-tools.jenkinsUrl" . }}
             - name: JENKINS_OPTS
-              value: '--requestHeaderSize=32768'
+              value: '--requestHeaderSize=32768 --prefix=/{{ .Values.jenkins.basePath }}'
             - name: PLATFORM_TYPE
               value: openshift
           resources:
@@ -100,8 +100,8 @@ spec:
               mountPath: /var/lib/jenkins
           readinessProbe:
             httpGet:
-              path: /login
-              port: 8080
+              path: /{{ .Values.jenkins.basePath }}/login
+              port: {{ .Values.jenkins.port }}
               scheme: HTTP
             initialDelaySeconds: 60
             timeoutSeconds: 10

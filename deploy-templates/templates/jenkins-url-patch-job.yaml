@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: jenkins-url-patch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: jenkins
+    {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      name: jenkins-url-patch
+    spec:
+      initContainers:
+        - name: jenkins-ready
+          image: {{ template "imageRegistry" . -}} curlimages/curl
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - '-c'
+            - >-
+              set -x;
+              while [ $(curl -sw '%{http_code}' {{ template "admin-tools.jenkinsUrl" . }}/login?from=%2F -o /dev/null) -ne 200 ]; do
+              sleep 10; done;
+          env:
+            - name: JENKINS_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-admin-token
+                  key: username
+            - name: JENKINS_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-admin-token
+                  key: password
+      containers:
+        - name: jenkins-url-patch
+          image: {{ template "imageRegistry" . -}} curlimages/curl
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - '-c'
+            - >-
+              set -x;
+              curl -d "script=$(cat /tmp/scripts/jenkins-url-patch.groovy)"
+              --user ${JENKINS_ADMIN_USERNAME}:${JENKINS_ADMIN_TOKEN} {{ include "admin-tools.jenkinsUrl" . }}/scriptText
+          volumeMounts:
+            - name: jenkins-url-patch
+              mountPath: /tmp/scripts/jenkins-url-patch.groovy
+              subPath: jenkins-url-patch.groovy
+          env:
+            - name: JENKINS_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-admin-token
+                  key: username
+            - name: JENKINS_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-admin-token
+                  key: password
+      volumes:
+        - name: jenkins-url-patch
+          configMap:
+            name: jenkins-url-patch
+            defaultMode: 0755
+      restartPolicy: Never
+      serviceAccountName: {{ .Values.jenkins.serviceAccountName }}

@@ -4,6 +4,9 @@ metadata:
   name: jenkins
   annotations:
     "helm.sh/resource-policy": keep
+  labels:
+    app: jenkins
+    {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
 spec:
   clientId: jenkins
   public: true
@@ -16,5 +19,5 @@ spec:
   audRequired: false
   secret: ''
   advancedProtocolMappers: false
-  webUrl: {{ template "jenkins-operator.jenkinsUrl" . }}
+  webUrl: {{ template "admin-tools.jenkinsUrl" . }}
   targetRealm: {{ template "keycloak.realm" . }}

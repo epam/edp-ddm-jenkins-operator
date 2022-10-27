@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gerrit-jenkins-plugin-url-patch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: jenkins
+    {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+data:
+  gerrit-jenkins-plugin-url-patch.groovy: |-
+    import com.sonyericsson.hudson.plugins.gerrit.trigger.GerritServer
+    import com.sonyericsson.hudson.plugins.gerrit.trigger.PluginImpl
+    import com.sonyericsson.hudson.plugins.gerrit.trigger.config.PluginConfig
+
+    PluginImpl plugin = PluginImpl.getInstance();
+    PluginConfig pluginConfig = plugin.getPluginConfig();
+
+    for (gerritServer in plugin.getServers()) {
+        if (gerritServer.name == "gerrit") {
+            gerritServer.getConfig().setGerritFrontEndURL("{{ include "admin-tools.gerritUrl" . }}")
+            println("GerritServer Frontend URL is patched to")
+            println(gerritServer.getConfig().getGerritFrontEndUrl())
+        }
+    }
+
+    plugin.save()

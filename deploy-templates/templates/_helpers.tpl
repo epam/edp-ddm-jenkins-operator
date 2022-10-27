@@ -37,26 +37,38 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 {{- end }}
 
-{{- define "edp.hostnameSuffix" -}}
-{{- printf "%s-%s.%s" .Values.cdPipelineName .Values.cdPipelineStageName .Values.dnsWildcard }}
-{{- end }}
-
 {{- define "keycloak.realm" -}}
 {{- printf "%s-%s" .Release.Namespace .Values.keycloak.realm }}
 {{- end -}}
 
 {{/*
-Define Jenkins URL
+Define Keycloak URL
 */}}
-{{- define "jenkins-operator.jenkinsBaseUrl" -}}
-{{- printf "%s-%s-%s" "jenkins" .Values.edpProject (include "edp.hostnameSuffix" .) }}
-{{- end }}
+{{- define "keycloak.url" -}}
+{{- printf "%s%s" "https://" .Values.keycloak.host }}
+{{- end -}}
 
 {{/*
 Define Jenkins URL
 */}}
-{{- define "jenkins-operator.jenkinsUrl" -}}
-{{- printf "%s%s" "https://" (include "jenkins-operator.jenkinsBaseUrl" .) }}
+{{- define "edp.hostnameSuffix" -}}
+{{- printf "%s-%s.%s" .Values.cdPipelineName .Values.cdPipelineStageName .Values.dnsWildcard }}
+{{- end }}
+
+{{- define "admin-tools.hostname" -}}
+{{- printf "admin-tools-%s" (include "edp.hostnameSuffix" .) }}
+{{- end }}
+
+{{- define "admin-tools.jenkinsUrl" -}}
+{{- printf "%s%s/%s" "https://" (include "admin-tools.hostname" .) .Values.jenkins.basePath }}
+{{- end }}
+
+{{- define "jenkins.localUrl" -}}
+{{- printf "%s:%s/%s" "https://jenkins" .Values.jenkins.port .Values.jenkins.basePath }}
+{{- end }}
+
+{{- define "admin-tools.gerritUrl" -}}
+{{- printf "%s%s/%s" "https://" (include "admin-tools.hostname" .) .Values.gerrit.basePath }}
 {{- end }}
 
 {{/*
@@ -90,3 +102,22 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "admin-routes.whitelist.annotation" -}}
 haproxy.router.openshift.io/ip_whitelist: {{ (include "admin-routes.whitelist.cidr" . | default "0.0.0.0/0") | quote }}
 {{- end -}}
+
+{{/*
+Redis
+*/}}
+{{- define "sentinel.host" -}}
+{{- if .Values.sentinel.host }}
+{{- .Values.sentinel.host }}
+{{- else -}}
+rfs-redis-sentinel.{{ .Values.namespace }}.svc
+{{- end }}
+{{- end }}
+
+{{- define "sentinel.port" -}}
+{{- if .Values.sentinel.port }}
+{{- .Values.sentinel.port }}
+{{- else -}}
+26379
+{{- end }}
+{{- end }}

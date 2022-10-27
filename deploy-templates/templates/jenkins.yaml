@@ -38,4 +38,4 @@ spec:
   keycloakSpec:
     enabled: {{ .Values.keycloakIntegration.enabled }}
     realm: {{ template "keycloak.realm" . }}
-    url: {{ template "jenkins-operator.jenkinsUrl" . }}
+    url: {{ template "admin-tools.jenkinsUrl" . }}

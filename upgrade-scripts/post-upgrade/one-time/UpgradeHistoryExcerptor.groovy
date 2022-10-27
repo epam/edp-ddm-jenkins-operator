@@ -9,9 +9,11 @@ void call() {
                 "-n $NAMESPACE | base64 --decode", returnStdout: true)
         def JENKINS_ADMIN_PASSWORD = sh(script: "oc get secret jenkins-admin-token -o jsonpath={.data.password} " +
                 "-n $NAMESPACE | base64 --decode", returnStdout: true)
-        def jenkinsRoute = sh(script: "oc get route jenkins -o jsonpath={.spec.host} -n $NAMESPACE", returnStdout: true)
-        def JENKINS_URL = "https://${jenkinsRoute}"
-        def JENKINS_URL_WITH_CREDS = "https://$JENKINS_ADMIN_USERNAME:$JENKINS_ADMIN_PASSWORD@${jenkinsRoute}"
+
+        def JENKINS_HOST = sh(script: "oc get route jenkins -o jsonpath={.spec.host} -n $NAMESPACE", returnStdout: true)
+        def JENKINS_PATH = sh(script: "oc get route jenkins -o jsonpath={.spec.path} -n $NAMESPACE", returnStdout: true).replaceAll("/\\z", "")
+        def JENKINS_URL = "https://${JENKINS_HOST}${JENKINS_PATH}"
+        def JENKINS_URL_WITH_CREDS = "https://$JENKINS_ADMIN_USERNAME:$JENKINS_ADMIN_PASSWORD@${JENKINS_HOST}${JENKINS_PATH}"
 
         // Define parameters for manually triggering of registry job-provisioner for history-excerptor
         def NAME = "history-excerptor"

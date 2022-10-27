@@ -1,20 +1,22 @@
 apiVersion: v1
 kind: Service
 metadata:
+  name: admin-tools-jenkins
+  annotations:
+    ingress.kubernetes.io/service-upstream: 'true'
+    konghq.com/override: kong-admin-tools-set-timeouts
+    konghq.com/path: /
+    konghq.com/plugins: jenkins-nopublic-oidc
+    konghq.com/protocol: http
   labels:
     app: jenkins
     {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
-  name: jenkins
 spec:
   ports:
     - name: http
       port: {{ .Values.jenkins.port }}
       protocol: TCP
       targetPort: {{ .Values.jenkins.port }}
-    - name: jnlp
-      port: {{ .Values.jenkins.jnlpPort }}
-      protocol: TCP
-      targetPort: {{ .Values.jenkins.jnlpPort }}
   selector:
     app: jenkins
   sessionAffinity: None

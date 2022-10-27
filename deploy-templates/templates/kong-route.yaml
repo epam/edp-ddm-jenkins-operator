@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: admin-tools-jenkins
+  annotations:
+    konghq.com/preserve-host: 'false'
+    konghq.com/protocols: 'http,https'
+  labels:
+    app: jenkins
+    {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+spec:
+  ingressClassName: kong-admin-tools
+  rules:
+  - host: {{ template "admin-tools.hostname" . }}
+    http:
+      paths:
+        - path: /{{ .Values.jenkins.basePath }}
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: admin-tools-jenkins
+              port:
+                number: {{ .Values.jenkins.port }}

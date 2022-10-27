@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gerrit-jenkins-plugin-url-patch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: jenkins
+    {{- include "jenkins-operator.metaLabels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      name: gerrit-jenkins-plugin-url-patch
+    spec:
+      initContainers:
+        - name: jenkins-ready
+          image: {{ template "imageRegistry" . -}} curlimages/curl
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - '-c'
+            - >-
+              set -x;
+              while [ "$(curl -d "script=$(cat /tmp/scripts/gerrit-jenkins-plugin-ready.groovy)"
+              --user ${JENKINS_ADMIN_USERNAME}:${JENKINS_ADMIN_TOKEN} {{ include "admin-tools.jenkinsUrl" . }}/scriptText)" != "Ready" ]; do
+              sleep 10; done;
+          volumeMounts:
+            - name: gerrit-jenkins-plugin-ready
+              mountPath: /tmp/scripts/gerrit-jenkins-plugin-ready.groovy
+              subPath: gerrit-jenkins-plugin-ready.groovy
+          env:
+            - name: JENKINS_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-admin-token
+                  key: username
+            - name: JENKINS_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-admin-token
+                  key: password
+      containers:
+        - name: gerrit-jenkins-plugin-url-patch
+          image: {{ template "imageRegistry" . -}} curlimages/curl
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - '-c'
+            - >-
+              set -x;
+              curl -d "script=$(cat /tmp/scripts/gerrit-jenkins-plugin-url-patch.groovy)"
+              --user ${JENKINS_ADMIN_USERNAME}:${JENKINS_ADMIN_TOKEN} {{ include "admin-tools.jenkinsUrl" . }}/scriptText
+          volumeMounts:
+            - name: gerrit-jenkins-plugin-url-patch
+              mountPath: /tmp/scripts/gerrit-jenkins-plugin-url-patch.groovy
+              subPath: gerrit-jenkins-plugin-url-patch.groovy
+          env:
+            - name: JENKINS_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-admin-token
+                  key: username
+            - name: JENKINS_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-admin-token
+                  key: password
+      volumes:
+        - name: gerrit-jenkins-plugin-ready
+          configMap:
+            name: gerrit-jenkins-plugin-ready
+            defaultMode: 0755
+        - name: gerrit-jenkins-plugin-url-patch
+          configMap:
+            name: gerrit-jenkins-plugin-url-patch
+            defaultMode: 0755
+      restartPolicy: Never
+      serviceAccountName: {{ .Values.jenkins.serviceAccountName }}
