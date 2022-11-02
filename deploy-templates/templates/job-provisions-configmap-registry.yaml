@@ -20,6 +20,9 @@ data:
     String folderName = "job-provisions"
     String ciFolderName = "ci"
 
+    def job = Jenkins.instance.getItem(folderName).getItem(ciFolderName).getItem(jobName)
+    job.delete()
+
     def folder = Jenkins.instance.getItem(folderName)
     if (folder == null) {
       folder = Jenkins.instance.createProject(Folder.class, folderName)
