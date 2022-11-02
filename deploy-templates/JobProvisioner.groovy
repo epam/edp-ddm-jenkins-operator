@@ -27,8 +27,10 @@ String deployRegistryRegulationsStages = '[' +
         '{"name": "create-permissions-business-process"},' +
         '{"name": "upload-form-changes"},' +
         '{"name": "create-reports"},' +
-        '{"name": "import-excerpts"}]]},' +
-        '{"stages": [{"name": "run-autotests"}]}' +
+        '{"name": "import-excerpts"},' +
+        '{"name": "publish-notification-templates"}]]},' +
+        '{"stages": [{"name": "publish-geoserver-configuration"},' +
+        '{"name": "run-autotests"}]}' +
         ']'
 
 String deployDataModelStages = '[' +
@@ -72,6 +74,12 @@ String cleanupStages = '[' +
         '{"name": "cleanup-trigger"}]}' +
         ']'
 
+String formMigrationStages = '[' +
+        '{"stages": [{"name": "checkout"},' +
+        '{"name": "init-registry"},' +
+        '{"name": "form-data-storage-migration"}]}' +
+        ']'
+
 String historyExcerptorStages = '[' +
         '{"stages": [{"name": "data-validation"},' +
         '{"name": "checkout"},' +
@@ -87,6 +95,7 @@ switch (codebaseName) {
                 createReleaseStages, repositoryPath, deploymentMode)
         createCleanUpPipeline("cleanup-job", codebaseName, cleanupStages,
                 repositoryPath, codebaseHistoryName, deploymentMode)
+        createFormMigrationPipeline("form-storage-migration", codebaseName, formMigrationStages, repositoryPath, deploymentMode)
         createReleaseDeletePipeline(new String("Delete-release-${codebaseName}"), codebaseName, defaultBranch,
                 deleteRegistryStages, repositoryPath, deploymentMode)
         if (codebaseBranch) {
@@ -175,6 +184,32 @@ void createReleaseDeletePipeline(String pipelineName, String codebaseName, Strin
                 stringParam("DEPLOYMENT_MODE", deploymentMode)
             }
 
+        }
+    }
+}
+
+void createFormMigrationPipeline(String pipelineName, String codebaseName, String stages,
+                                 String repositoryPath, String deploymentMode) {
+    pipelineJob(pipelineName) {
+        concurrentBuild(false)
+        logRotator {
+            numToKeep(10)
+        }
+        definition {
+            cps {
+                script("@Library(['edp-library-pipelines']) _ \n\nBuild()")
+                sandbox(true)
+            }
+            parameters {
+                booleanParam("DELETE_INVALID_DATA", false)
+                booleanParam("DELETE_AFTER_MIGRATION", false)
+                stringParam("ADDITIONAL_KEY_PATTERNS", "")
+                stringParam("STAGES", stages)
+                stringParam("CODEBASE_NAME", codebaseName)
+                stringParam("REPOSITORY_PATH", repositoryPath)
+                stringParam("LOG_LEVEL", "INFO", "ERROR, WARN, INFO or DEBUG")
+                stringParam("DEPLOYMENT_MODE", deploymentMode)
+            }
         }
     }
 }
