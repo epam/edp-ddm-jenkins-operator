@@ -21,7 +21,7 @@ data:
     String ciFolderName = "ci"
 
     def job = Jenkins.instance.getItem(folderName).getItem(ciFolderName).getItem(jobName)
-    job.delete()
+    job ? job.delete() : println("skip delete")
 
     def folder = Jenkins.instance.getItem(folderName)
     if (folder == null) {
