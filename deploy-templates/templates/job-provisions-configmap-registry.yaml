@@ -20,9 +20,6 @@ data:
     String folderName = "job-provisions"
     String ciFolderName = "ci"
 
-    def job = Jenkins.instance.getItem(folderName).getItem(ciFolderName).getItem(jobName)
-    job ? job.delete() : println("skip delete")
-
     def folder = Jenkins.instance.getItem(folderName)
     if (folder == null) {
       folder = Jenkins.instance.createProject(Folder.class, folderName)
@@ -32,6 +29,10 @@ data:
     if (ciFolder == null) {
       ciFolder = folder.createProject(Folder.class, ciFolderName)
     }
+
+    def job = Jenkins.instance.getItem(folderName).getItem(ciFolderName).getItem(jobName)
+
+    job ? job.delete() : println("skip delete")
 
     def project = ciFolder.getItem(jobName)
     if (project == null) {
