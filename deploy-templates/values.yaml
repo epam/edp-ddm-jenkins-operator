@@ -24,7 +24,7 @@ jenkins:
       type: ssh
     edp-library-pipelines:
       url: ssh://jenkins@gerrit.mdtu-ddm-edp-cicd.svc:32114/mdtu-ddm/devops/registry-regulations-publications/registry-regulations-publication-pipeline.git
-      tag: build/1.5.0-SNAPSHOT.213
+      tag: build/1.5.0-SNAPSHOT.216
       secret: edp-gerrit-ciuser-sshkey
       type: ssh
   jobProvisioner: registry
@@ -50,6 +50,9 @@ keycloak:
   realm: admin
 
 sentinel: {}
+
+registryRegulation:
+  cleanupVersionCandidateDBsCronSchedule: "TZ=Europe/Kiev\\n00 17 * * 1-5"
 
 # Test values (actually are passed via deploy pipeline)
 dockerRegistry: docker-registry.openshift-image-registry.svc

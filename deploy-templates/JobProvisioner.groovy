@@ -6,6 +6,7 @@ String codebaseBranch = "${BRANCH}"
 String defaultBranch = "${DEFAULT_BRANCH}"
 String repositoryPath = "${REPOSITORY_PATH}"
 String deploymentMode = "${DEPLOYMENT_MODE}"
+String cronScheduleForCleanupVersionCandidateDBs = "${CRON_SCHEDULE_FOR_CLEANUP_VC_DB}"
 String codebaseHistoryName = "history-excerptor"
 
 String deployRegistryRegulationsStages = '[' +
@@ -53,6 +54,12 @@ String buildDataComponentStages = '[' +
         '{"name": "build-image-from-dockerfile"}]}' +
         ']'
 
+String codeReviewStagesRegistryRegulations = '[' +
+        '{"stages": [{"name": "checkout"},' +
+        '{"name": "init-registry"},' +
+        '{"name": "create-schema-version-candidate"}]}' +
+        ']'
+
 String createReleaseStages = '[' +
         '{"stages": [{"name": "checkout"},' +
         '{"name": "create-branch"},' +
@@ -72,7 +79,12 @@ String deleteServiceStages = '[' +
 String cleanupStages = '[' +
         '{"stages": [{"name": "checkout"},' +
         '{"name": "init-registry"},' +
-        '{"name": "cleanup-trigger"}]}' +
+        '{"name": "cleanup-trigger"},' +
+        '{"name": "cleanup-of-version-candidate-dbs"}]}' +
+        ']'
+
+String cleanupVersionCandidateDBsStages = '[' +
+        '{"stages": [{"name": "cleanup-of-version-candidate-dbs"}]}' +
         ']'
 
 String formMigrationStages = '[' +
@@ -96,6 +108,8 @@ switch (codebaseName) {
                 createReleaseStages, repositoryPath, deploymentMode)
         createCleanUpPipeline("cleanup-job", codebaseName, cleanupStages,
                 repositoryPath, codebaseHistoryName, deploymentMode)
+        createCleanUpVersionCandidateDBsPipeline("cleanup-of-version-candidate-db", codebaseName, cleanupVersionCandidateDBsStages,
+                repositoryPath, codebaseHistoryName, deploymentMode, cronScheduleForCleanupVersionCandidateDBs)
         createFormMigrationPipeline("form-storage-migration", codebaseName, formMigrationStages, repositoryPath, deploymentMode)
         createReleaseDeletePipeline(new String("Delete-release-${codebaseName}"), codebaseName, defaultBranch,
                 deleteRegistryStages, repositoryPath, deploymentMode)
@@ -104,6 +118,8 @@ switch (codebaseName) {
                     deployRegistryRegulationsStages, repositoryPath, deploymentMode)
             createCiPipeline(new String("Build-${codebaseName}-data-model"), codebaseName, codebaseBranch,
                     deployDataModelStages, repositoryPath, deploymentMode, false)
+            createCiPipeline(new String("Code-review-${codebaseName}"), codebaseName, codebaseBranch,
+                    codeReviewStagesRegistryRegulations, repositoryPath, deploymentMode)
         }
         break
     case "history-excerptor":
@@ -138,7 +154,10 @@ void createCiPipeline(String pipelineName, String codebaseName, String codebaseB
             triggers {
                 gerrit {
                     events {
-                        changeMerged()
+                        if (pipelineName.contains("Code-review"))
+                            patchsetCreated()
+                        else
+                            changeMerged()
                     }
                     project("plain:${codebaseName}", ["plain:${codebaseBranch}"])
                 }
@@ -150,7 +169,7 @@ void createCiPipeline(String pipelineName, String codebaseName, String codebaseB
                 sandbox(true)
             }
             parameters {
-                if (codebaseName == "registry-regulations" && !pipelineName.contains("data-model"))
+                if (codebaseName == "registry-regulations" && !pipelineName.contains("data-model") && !pipelineName.contains("Code-review") )
                     booleanParam("FULL_DEPLOY", false)
                 stringParam("STAGES", stages)
                 stringParam("CODEBASE_NAME", codebaseName)
@@ -230,6 +249,34 @@ void createCleanUpPipeline(String pipelineName, String codebaseName, String stag
             parameters {
                 booleanParam("RECREATE_EMPTY", true, "If set to true, registry-regulations will be recreated from " +
                         "empty template, else, will be used current source")
+                stringParam("STAGES", stages)
+                stringParam("CODEBASE_NAME", codebaseName)
+                stringParam("CODEBASE_HISTORY_NAME", codebaseHistoryName)
+                stringParam("REPOSITORY_PATH", repositoryPath)
+                stringParam("LOG_LEVEL", "INFO", "ERROR, WARN, INFO or DEBUG")
+                stringParam("DEPLOYMENT_MODE", deploymentMode)
+            }
+
+        }
+    }
+}
+
+void createCleanUpVersionCandidateDBsPipeline(String pipelineName, String codebaseName, String stages,
+                                              String repositoryPath, String codebaseHistoryName, String deploymentMode, String cronSchedule) {
+    pipelineJob(pipelineName) {
+        concurrentBuild(false)
+        logRotator {
+            numToKeep(10)
+        }
+        triggers {
+            cron(cronSchedule)
+        }
+        definition {
+            cps {
+                script("@Library(['edp-library-pipelines']) _ \n\nBuild()")
+                sandbox(true)
+            }
+            parameters {
                 stringParam("STAGES", stages)
                 stringParam("CODEBASE_NAME", codebaseName)
                 stringParam("CODEBASE_HISTORY_NAME", codebaseHistoryName)
