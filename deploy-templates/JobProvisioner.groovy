@@ -24,6 +24,7 @@ String deployRegistryRegulationsStages = '[' +
         '{"name": "update-registry-settings"},' +
         '{"name": "update-theme-login-page"},' +
         '{"name": "create-keycloak-roles"},' +
+        '{"name": "update-bp-grouping"},' +
         '{"name": "bpms-rollout"},' +
         '{"name": "upload-business-process-changes"},' +
         '{"name": "create-permissions-business-process"},' +
