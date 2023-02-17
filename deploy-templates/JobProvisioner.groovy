@@ -78,10 +78,8 @@ String deleteServiceStages = '[' +
         ']'
 
 String cleanupStages = '[' +
-        '{"stages": [{"name": "checkout"},' +
-        '{"name": "init-registry"},' +
-        '{"name": "cleanup-trigger"},' +
-        '{"name": "cleanup-of-version-candidate-dbs"}]}' +
+        '{"stages": [{"name": "cleanup-of-version-candidate-dbs"},' +
+        '{"name": "cleanup-trigger"}]}' +
         ']'
 
 String cleanupVersionCandidateDBsStages = '[' +
@@ -244,12 +242,11 @@ void createCleanUpPipeline(String pipelineName, String codebaseName, String stag
         }
         definition {
             cps {
-                script("@Library(['edp-library-pipelines']) _ \n\nBuild()")
+                script("@Library(['edp-library-pipelines']) _ \n\nCleanup()")
                 sandbox(true)
             }
             parameters {
-                booleanParam("RECREATE_EMPTY", true, "If set to true, registry-regulations will be recreated from " +
-                        "empty template, else, will be used current source")
+                booleanParam("DELETE_REGISTRY_REGULATIONS_GERRIT_REPOSITORY", false, "If checked, registry-regulations repository will be recreated from empty template")
                 stringParam("STAGES", stages)
                 stringParam("CODEBASE_NAME", codebaseName)
                 stringParam("CODEBASE_HISTORY_NAME", codebaseHistoryName)
