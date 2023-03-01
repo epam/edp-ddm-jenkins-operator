@@ -1,4 +1,4 @@
-apiVersion: v2.edp.epam.com/v1alpha1
+apiVersion: v2.edp.epam.com/v1
 kind: Jenkins
 metadata:
   name: jenkins
@@ -15,16 +15,9 @@ spec:
       - {{ . -}}
         {{- end -}}
   {{ end }}
-  image: {{ template "imageRegistry" . -}} {{ .Values.jenkins.image.name }}
-  version: {{ .Values.jenkins.image.version }}
-  initImage: {{ template "imageRegistry" . -}} {{ .Values.jenkins.initImage.name }}
   {{- if .Values.jenkins.basePath }}
   basePath: "{{ .Values.jenkins.basePath }}"
-  {{- end }}
-  volumes:
-    - name: data
-      storageClass: {{ .Values.global.storageClass }}
-      capacity: {{ .Values.jenkins.storage.size }}
+  {{- end }
   sharedLibraries:
     {{- range $key, $value := .Values.jenkins.sharedLibraries }}
     - name: {{ $key }}
@@ -38,4 +31,3 @@ spec:
   keycloakSpec:
     enabled: {{ .Values.keycloakIntegration.enabled }}
     realm: {{ template "keycloak.realm" . }}
-    url: {{ template "admin-tools.jenkinsUrl" . }}
