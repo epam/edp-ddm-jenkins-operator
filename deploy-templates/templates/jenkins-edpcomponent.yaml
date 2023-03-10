@@ -1,6 +1,11 @@
 apiVersion: v1.edp.epam.com/v1
 kind: EDPComponent
 metadata:
+  annotations:
+    control-plane-console/description: {{ .Values.edpComponent.description }}
+    control-plane-console/display-name: {{ .Values.edpComponent.displayName }}
+    control-plane-console/display-order: '2'
+    control-plane-console/operational-zone: {{ .Values.edpComponent.operationalZone }}
   name: jenkins
   labels:
     app: jenkins

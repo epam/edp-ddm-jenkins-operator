@@ -62,6 +62,12 @@ global:
   platform: openshift
 image:
   version: 1.1.1-1
+
+edpComponent:
+  description: "Програмний комплекс, що забезпечує автоматизацію в життєвому циклі розгортання регламенту Реєстру"
+  displayName: "Сервіс розгортання регламенту (Jenkins)"
+  operationalZone: "registry-administration-zone"
+
 dnsWildcard: mdtu-ddm.edp.epam.com
 edpProject: mdtu-ddm-edp-cicd
 namespace: ns
