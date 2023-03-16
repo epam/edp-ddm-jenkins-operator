@@ -42,7 +42,7 @@ String deployDataModelStages = '[' +
         '{"parallelStages": [' +
         '{"name": "create-schema"},' +
         '[{"name": "create-projects"},' +
-        '{"name": "create-pipelines"},' +
+        '{"name": "delete-data-services"},' +
         '{"name": "clone-projects"}]]},' +
         '{"stages": [{"name": "generate-projects"},' +
         '{"name": "commit-projects"},' +
@@ -78,7 +78,10 @@ String deleteServiceStages = '[' +
         ']'
 
 String cleanupStages = '[' +
-        '{"stages": [{"name": "cleanup-of-version-candidate-dbs"},' +
+        '{"stages": [{"name": "checkout"},' +
+        '{"name": "init-registry"},' +
+        '{"name": "cleanup-of-version-candidate-dbs"},' +
+        '{"name": "delete-data-services"},' +
         '{"name": "cleanup-trigger"}]}' +
         ']'
 
@@ -134,8 +137,6 @@ switch (codebaseName) {
         createFolder(codebaseName)
         createReleaseDeletePipeline(new String("Create-release-${codebaseName}"), codebaseName, defaultBranch,
                 createReleaseStages, repositoryPath, deploymentMode)
-        createReleaseDeletePipeline(new String("Delete-release-${codebaseName}"), codebaseName, defaultBranch,
-                deleteServiceStages, repositoryPath, deploymentMode)
         if (codebaseBranch)
             createCiPipeline(new String("Build-${codebaseName}"), codebaseName, codebaseBranch,
                     buildDataComponentStages, repositoryPath, deploymentMode)
