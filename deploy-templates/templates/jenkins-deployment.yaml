@@ -18,6 +18,7 @@ spec:
     metadata:
       labels:
         app: jenkins
+        collect.logs: "plain-text"
       annotations:
         backup.velero.io/backup-volumes: jenkins-data
         sidecar.istio.io/inject: "false"
