@@ -18,8 +18,10 @@ void call() {
                 returnStdout: true)
         def GIT_CREDENTIALS_ID = sh(script: "oc get gitserver gerrit -o jsonpath={.spec.nameSshKeySecret} " +
                 "-n $NAMESPACE", returnStdout: true)
+        def GERRIT_USER = sh(script: "oc get gitserver gerrit -o jsonpath={.spec.gitUser} -n $NAMESPACE", returnStdout: true)
+        def GERRIT_HOST = sh(script: "oc get gitserver gerrit -o jsonpath={.spec.gitHost} -n $NAMESPACE", returnStdout: true)
         def GERRIT_PORT = sh(script: "oc get gitserver gerrit -o jsonpath={.spec.sshPort} -n $NAMESPACE", returnStdout: true)
-        def REPOSITORY_PATH = "ssh://jenkins@gerrit:$GERRIT_PORT/$codebase"
+        def REPOSITORY_PATH = "ssh://$GERRIT_USER@$GERRIT_HOST:$GERRIT_PORT/$codebase"
         def DEPLOYMENT_MODE = sh(script: "helm get values registry-configuration -n $NAMESPACE | grep 'deploymentMode: ' | awk '{print \$2}'", returnStdout: true).trim()
 
         // Trigger registry job-provisioner
