@@ -31,6 +31,7 @@ String deployRegistryRegulationsStages = '[' +
         '{"name": "upload-form-changes"},' +
         '{"name": "create-reports"},' +
         '{"name": "import-excerpts"},' +
+        ((deploymentMode.equals("development") ? '{"name": "import-mock-integrations"},' : '')) +
         '{"name": "publish-notification-templates"}]]},' +
         '{"stages": [{"name": "publish-geoserver-configuration"},' +
         '{"name": "run-autotests"}]}' +
