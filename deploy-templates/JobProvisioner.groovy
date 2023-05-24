@@ -42,10 +42,10 @@ String deployDataModelStages = '[' +
         '{"name": "init-registry"}]},' +
         '{"parallelStages": [' +
         '{"name": "create-schema"},' +
-        '[{"name": "create-projects"},' +
-        '{"name": "delete-data-services"},' +
-        '{"name": "clone-projects"}]]},' +
-        '{"stages": [{"name": "generate-projects"},' +
+        '[{"name": "create-projects"}]]},' +
+        '{"stages": [{"name": "delete-data-services"},' +
+        '{"name": "clone-projects"},' +
+        '{"name": "generate-projects"},' +
         '{"name": "commit-projects"},' +
         '{"name": "build-projects"},' +
         '{"name": "deploy-projects"}]}' +
