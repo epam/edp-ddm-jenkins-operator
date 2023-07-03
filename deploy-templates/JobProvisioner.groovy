@@ -48,7 +48,8 @@ String deployDataModelStages = '[' +
         '{"name": "generate-projects"},' +
         '{"name": "commit-projects"},' +
         '{"name": "build-projects"},' +
-        '{"name": "deploy-projects"}]}' +
+        '{"name": "deploy-projects"},' +
+        '{"name": "generate-geoserver-rls-envoy"}]}' +
         ']'
 
 String buildDataComponentStages = '[' +
