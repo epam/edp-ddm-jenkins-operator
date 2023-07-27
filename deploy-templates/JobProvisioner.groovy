@@ -18,7 +18,7 @@ String deployRegistryRegulationsStages = '[' +
         '{"name": "create-backup"},' +
         '{"name": "create-redash-roles"}]},' +
         '{"parallelStages": [{"name": "deploy-data-model"},' +
-        ((deploymentMode.equals("development") ? '[{"name": "create-redash-snippets"},' : '[')) +
+        ((deploymentMode.equals("development") ? '[{"name": "restore-redash-admin-state"},' : '[')) +
         '{"name": "upload-global-vars-changes"},' +
         '{"name": "create-trembita-business-process"},' +
         '{"name": "update-registry-settings"},' +

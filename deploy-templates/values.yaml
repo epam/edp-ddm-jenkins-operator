@@ -25,7 +25,7 @@ jenkins:
       type: ssh
     edp-library-pipelines:
       url: ssh://jenkins@gerrit.mdtu-ddm-edp-cicd.svc:32114/mdtu-ddm/devops/registry-regulations-publications/registry-regulations-publication-pipeline.git
-      tag: build/1.9.6.1
+      tag: build/1.9.6.2
       secret: edp-gerrit-ciuser-sshkey
       type: ssh
   jobProvisioner: registry
