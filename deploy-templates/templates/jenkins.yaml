@@ -9,12 +9,6 @@ metadata:
 spec:
   edpSpec:
     dnsWildcard: {{ .Values.dnsWildcard }}
-    {{- if .Values.jenkins.imagePullSecrets}}
-    imagePullSecrets:
-      {{- range .Values.jenkins.imagePullSecrets }}
-      - {{ . -}}
-        {{- end -}}
-  {{ end }}
   {{- if .Values.jenkins.basePath }}
   basePath: "{{ .Values.jenkins.basePath }}"
   {{- end }}
