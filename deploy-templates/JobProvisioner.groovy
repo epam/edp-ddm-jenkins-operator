@@ -162,6 +162,14 @@ void createCiPipeline(String pipelineName, String codebaseName, String codebaseB
                             changeMerged()
                     }
                     project("plain:${codebaseName}", ["plain:${codebaseBranch}"])
+
+                    configure {
+                        if (pipelineName.contains("Code-review")) {
+                            it / 'triggerOnEvents' / 'com.sonyericsson.hudson.plugins.gerrit.trigger.hudsontrigger.events.PluginPatchsetCreatedEvent' <<  {
+                                'excludePrivateState'(true)
+                            }
+                        }
+                    }
                 }
             }
         }
