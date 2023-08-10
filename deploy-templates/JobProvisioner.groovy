@@ -58,8 +58,9 @@ String buildDataComponentStages = '[' +
         ']'
 
 String codeReviewStagesRegistryRegulations = '[' +
-        '{"stages": [{"name": "checkout"},' +
+        '{"stages": [{"name": "gerrit-checkout"},' +
         '{"name": "init-registry"},' +
+        '{"name": "registry-regulations-validation"},' +
         '{"name": "create-schema-version-candidate"}]}' +
         ']'
 
